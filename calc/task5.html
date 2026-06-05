@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <title>Задание 5: Финальное задание</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Задание 5: Финальное</h1>
+
+        <div class="criteria">
+            <h3>Критерии оценивания (MAX: 10.0)</h3>
+            <ul>
+                <li>Базовая оценка: 10.0 баллов</li>
+                <li>Штраф за время: после 5:00 за каждые 15 секунд -0.5 балла</li>
+                <li>Штраф за подсказки: -1.0 балл за каждую</li>
+                <li>Минимальный балл: 0.0</li>
+            </ul>
+        </div>
+
+        <div class="input-row">
+            <div class="input-group">
+                <label for="min-input">Минуты</label>
+                <input type="number" id="min-input" min="0" placeholder="0">
+            </div>
+            <div class="input-group">
+                <label for="sec-input">Секунды</label>
+                <input type="number" id="sec-input" min="0" max="59" placeholder="0">
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="hints-input">Количество подсказок:</label>
+            <input type="number" id="hints-input" min="0" value="0" placeholder="0">
+        </div>
+
+        <div class="score-display" id="score-display">
+            Текущий балл: 10.0 / 10.0
+        </div>
+
+        <a href="index.html" class="btn btn-secondary back-btn">← Назад на главную</a>
+    </div>
+
+    <script>
+        const TASK_ID = 'task5';
+        const MAX_SCORE = 10.0;
+
+        function loadScores() {
+            const stored = sessionStorage.getItem('quest_calc_v1');
+            return stored ? JSON.parse(stored) : {};
+        }
+
+        function saveScores(scores) {
+            sessionStorage.setItem('quest_calc_v1', JSON.stringify(scores));
+        }
+
+        function calculateScore(min, sec, hints) {
+            const totalSec = (parseInt(min) || 0) * 60 + (parseInt(sec) || 0);
+
+            let timePenalty = 0;
+            if (totalSec > 300) { // 5 минут = 300 секунд
+                const extraSec = totalSec - 300;
+                // Каждые 15 секунд сверх 5 минут = -0.5 балла
+                timePenalty = Math.floor(extraSec / 15) * 0.5;
+            }
+
+            const hintPenalty = (parseInt(hints) || 0) * 1.0;
+
+            let score = 10.0 - timePenalty - hintPenalty;
+
+            if (score < 0) score = 0.0;
+
+            // Округление до ближайших 0.5
+            return Math.round(score * 2) / 2;
+        }
+
+        function updateUI() {
+            const minInput = document.getElementById('min-input');
+            const secInput = document.getElementById('sec-input');
+            const hintsInput = document.getElementById('hints-input');
+            const display = document.getElementById('score-display');
+
+            let min = parseInt(minInput.value);
+            let sec = parseInt(secInput.value);
+            let hints = parseInt(hintsInput.value);
+
+            if (isNaN(min) || min < 0) min = 0;
+            if (isNaN(sec) || sec < 0) sec = 0;
+            if (sec > 59) sec = 59;
+            if (isNaN(hints) || hints < 0) hints = 0;
+
+            const score = calculateScore(min, sec, hints);
+
+            // Визуальная подсветка, если есть штраф за время
+            const totalSec = min * 60 + sec;
+            if (totalSec > 300) {
+                display.style.backgroundColor = 'var(--btn-danger)';
+            } else {
+                display.style.backgroundColor = 'var(--btn-bg)';
+            }
+
+            display.textContent = `Текущий балл: ${score.toFixed(1)} / ${MAX_SCORE}`;
+
+            // Сохраняем в sessionStorage
+            const scores = loadScores();
+            scores[TASK_ID] = {
+                score: score,
+                raw: { min: min, sec: sec, hints: hints }
+            };
+            saveScores(scores);
+        }
+
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', () => {
+            const minInput = document.getElementById('min-input');
+            const secInput = document.getElementById('sec-input');
+            const hintsInput = document.getElementById('hints-input');
+            const scores = loadScores();
+
+            // Восстанавливаем сохраненные значения
+            if (scores[TASK_ID] && scores[TASK_ID].raw) {
+                minInput.value = scores[TASK_ID].raw.min;
+                secInput.value = scores[TASK_ID].raw.sec;
+                hintsInput.value = scores[TASK_ID].raw.hints;
+            }
+
+            updateUI();
+
+            // Слушаем изменения ввода
+            minInput.addEventListener('input', updateUI);
+            secInput.addEventListener('input', updateUI);
+            hintsInput.addEventListener('input', updateUI);
+        });
+    </script>
+</body>
+</html>

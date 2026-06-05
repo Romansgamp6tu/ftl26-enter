@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <title>Калькулятор баллов</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Калькулятор баллов</h1>
+
+        <div class="task-list" id="task-list"></div>
+
+        <button class="btn btn-danger" id="reset-btn">Сбросить все баллы</button>
+    </div>
+
+    <script>
+        const TASKS = [
+            { id: 'task1', name: 'Мишень', max: 3, url: 'task1.html' },
+            { id: 'task2', name: 'Игра в числа с кубиками', max: 5, url: 'task2.html' },
+            { id: 'task3', name: 'Солнечный круг', max: 3, url: 'task3.html' },
+            { id: 'task4', name: 'Тир', max: 7, url: 'task4.html' },
+            { id: 'task5', name: 'Финальное задание', max: 10, url: 'task5.html' },
+            { id: 'task6', name: 'Порадовать нас', max: 2, url: 'task6.html' }
+        ];
+
+        function loadScores() {
+            const stored = sessionStorage.getItem('quest_calc_v1');
+            return stored ? JSON.parse(stored) : {};
+        }
+
+        function saveScores(scores) {
+            sessionStorage.setItem('quest_calc_v1', JSON.stringify(scores));
+        }
+
+        function renderTaskList() {
+            const scores = loadScores();
+            const list = document.getElementById('task-list');
+            list.innerHTML = '';
+
+            TASKS.forEach(task => {
+                const score = scores[task.id]?.score || 0;
+                const btn = document.createElement('a');
+                btn.href = task.url;
+                btn.className = 'task-btn';
+                btn.innerHTML = `
+                        <span>${task.name}</span>
+                        <span class="score">${score.toFixed(1)}/${task.max}</span>
+                    `;
+                list.appendChild(btn);
+            });
+        }
+
+        function resetScores() {
+            if (confirm('Вы уверены? Все баллы будут сброшены.')) {
+                sessionStorage.removeItem('quest_calc_v1');
+                renderTaskList();
+            }
+        }
+
+        document.getElementById('reset-btn').addEventListener('click', resetScores);
+        renderTaskList();
+    </script>
+</body>
+</html>
